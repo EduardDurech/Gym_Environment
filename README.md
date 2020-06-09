@@ -21,4 +21,5 @@ import env_pkg
 env = gym.make('fooEnv_ID')
 ```
 
-Based off of https://github.com/MartinThoma/banana-gym
+##Note: This is meant as an absolute minimal requirement for creating a Gym Environment.
+This does *NOT* check dependencies, log, or do anything fancy. See https://github.com/MartinThoma/banana-gym for further additions
