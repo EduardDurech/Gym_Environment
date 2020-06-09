@@ -4,7 +4,7 @@ from gym import spaces
 class FooEnv(gym.Env):
     def __init__(self):
         self.minPositionX = 0.0
-        self.maxPositionX = 0.0 #Example vars for x position observation bounds
+        self.maxPositionX = 10.0 #Example vars for x position observation bounds
 
         # Define Action Space, see https://github.com/openai/gym/tree/master/gym/spaces for types
         # spaces.Discrete(5) will create 5 discrete possible actions, which will be passed as a
