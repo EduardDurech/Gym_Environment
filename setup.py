@@ -7,9 +7,9 @@ setup(
     packages=find_packages(),
 )
 
+##Note: this does *NOT* check dependencies
+##For dependencies, include e.g.:
 """
-Note: this does *NOT* check dependencies, include e.g.:
-```
 from setuptools import find_packages
 
 setup(
@@ -18,5 +18,4 @@ setup(
     packages=find_packages(),
     ..
 )
-```
 """
