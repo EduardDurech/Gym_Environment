@@ -9,7 +9,7 @@ class FooEnv(gym.Env):
         # Define Action Space, see https://github.com/openai/gym/tree/master/gym/spaces for types
         # spaces.Discrete(5) will create 5 discrete possible actions, which will be passed as a
         # an integer to step(...) as the var action in range [0, n-1] with n actions
-        self.action_space = spaces.Discrete(21)
+        self.action_space = spaces.Discrete(5)
 
         # Define Observation Space using spaces as in Action, in a spaces.Box there must be a [low, high]
         self.observation_space = spaces.Box(self.minPositionX, self.maxPositionX)
