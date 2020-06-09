@@ -1,7 +1,7 @@
 from setuptools setup
 
 setup(
-    name="fooenv",
+    name="env_pkg",
     version="0.0"
 )
 
