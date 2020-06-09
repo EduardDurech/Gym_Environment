@@ -1,10 +1,8 @@
 from setuptools setup
 
 setup(
-    name="gym_banana",
-    version="0.0.2",
-    install_requires=["gym>=0.2.3", "pandas", "cfg_load"],
-    packages=find_packages(),
+    name="fooenv",
+    version="0.0"
 )
 
 ##Note: this does *NOT* check dependencies
