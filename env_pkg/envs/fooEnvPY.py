@@ -50,4 +50,4 @@ class FooEnv(gym.Env):
         ... Operations to get observations, i.e.
         obs = self.get_state()
         """
-        return self.get_state()
+        return obs
