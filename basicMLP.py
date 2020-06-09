@@ -34,6 +34,7 @@ random_process = OrnsteinUhlenbeckProcess() #Optional random process, see https:
 memory = SequentialMemory(limit=50000, window_length=1)
 policy = BoltzmannQPolicy()
 
-agentDQN = DQNAgent(model=DQNModel, nb_actions=n_actions, memory=memory, nb_steps_warmup=10, target_model_update=1e-2, policy=policy)
+agentDQN = DQNAgent(model=DQNModel, nb_actions=n_actions, memory=memory, nb_steps_warmup=10,
+                    target_model_update=1e-2, policy=policy, random_process=random_process)
 agentDQN.compile(Adam(lr=1e-3), metrics=['mae'])
 agentDQN.fit(env, nb_steps=10000, visualize=False)
