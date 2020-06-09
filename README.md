@@ -18,7 +18,7 @@ pip install -e .
 import gym
 import env_pkg
 
-env = gym.make('fooEnv-v0')
+env = gym.make('fooEnv_ID')
 ```
 
 Based off of https://github.com/MartinThoma/banana-gym
