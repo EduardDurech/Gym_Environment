@@ -30,13 +30,6 @@ dn2 = Dense(100, activation='relu')(dn1)
 otp = Dense(n_actions, activation='linear')(dn2)
 DQNModel = Model(input=inp, output=otp)
 
-
-memory = SequentialMemory(limit=50000, window_length=1)
-policy = BoltzmannQPolicy()
-dqn = DQNAgent(model=model, nb_actions=nb_actions, memory=memory, nb_steps_warmup=10,
-               target_model_update=1e-2, policy=policy)
-dqn.compile(Adam(lr=1e-3), metrics=['mae'])
-
 random_process = OrnsteinUhlenbeckProcess() #Optional random process, see https://github.com/keras-rl/keras-rl/blob/master/rl/random.py
 memory = SequentialMemory(limit=50000, window_length=1)
 policy = BoltzmannQPolicy()
