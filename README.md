@@ -16,7 +16,7 @@ pip install -e .
 # Implementation
 ```
 import gym
-import Gym_Environment
+import env_pkg
 
 env = gym.make('fooEnv-v0')
 ```
