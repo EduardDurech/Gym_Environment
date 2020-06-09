@@ -8,7 +8,7 @@ pip install gym
 ```
 
 # Installation
-Navitage to main directory (Gym_Environment)
+Navitage to main directory /Gym_Environment
 ```
 pip install -e .
 ```
@@ -20,6 +20,7 @@ import env_pkg
 
 env = gym.make('fooEnv_ID')
 ```
+
 
 ##Note: This is meant as an absolute minimal requirement for creating a Gym Environment.
 This does *NOT* check dependencies, log, or do anything fancy. See https://github.com/MartinThoma/banana-gym for further additions
