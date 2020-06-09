@@ -2,16 +2,20 @@ import gym
 from gym import spaces
 import numpy as np
 import random
+import cv2
+
 
 from flatland.envs.rail_env import RailEnv
 from flatland.envs.rail_generators import sparse_rail_generator
 from flatland.envs.schedule_generators import sparse_schedule_generator
 from flatland.utils.rendertools import RenderTool
-from utils.observation_utils import normalize_observation
+# from utils.observation_utils import normalize_observation
 from flatland.envs.observations import TreeObsForRailEnv
 from flatland.envs.predictions import ShortestPathPredictorForRailEnv
 from flatland.envs.agent_utils import RailAgentStatus
 from flatland.envs.malfunction_generators import malfunction_from_params, MalfunctionParameters
+
+
 
 x_dim = 36
 y_dim = 36
@@ -25,7 +29,7 @@ speed_ration_map = {1.: 0.25,  # Fast passenger train
                     1. / 3.: 0.25,  # Slow commuter train
                     1. / 4.: 0.25}  # Slow freight train
 
-n_agents = 10
+n_agents = 1
 
 # Use a the malfunction generator to break agents from time to time
 stochastic_data = MalfunctionParameters(malfunction_rate=1/10000,  # Rate of malfunction occurence
@@ -47,7 +51,7 @@ class FooEnv(gym.Env):
         self.action_space = spaces.Discrete(5)
 
         # Define Observation Space using spaces as in Action, in a spaces.Box there must be a [low, high]
-        self.observation_space = spaces.Box(self.minPositionX, self.maxPositionX)
+        # self.observation_space = spaces.Box(self.minPositionX, self.maxPositionX)
 
         self._rail_env = RailEnv(
             width=x_dim,
@@ -63,8 +67,13 @@ class FooEnv(gym.Env):
             malfunction_generator_and_process_data=malfunction_from_params(stochastic_data),
             obs_builder_object=TreeObservation)
 
+        self.action_dict = dict()
+        self.action_prob = [0] * 5
+        self.info = dict()
+
     def set_action(self, action):
-        pass
+        # if self.info[0]:
+        self.action_dict.update({0: action})
 
     def step(self, action):
         """
@@ -73,36 +82,37 @@ class FooEnv(gym.Env):
         return obs, reward, resetFlag, info
             see https://gym.openai.com/docs/#observations
         """
-        
-        """
-        ... Operations on action, i.e.
-        # self.set_action()
-        
-        ... Operations to determine reward, i.e.
-        reward = self.get_reward()
-        
-        ... Operations to get observations, i.e.
-        obs = self.get_state()
-        
-        ... Operations to determine if reset conditions met, i.e.
-        resetFlag = self.check_is_done()
-        """
-
         self.set_action(action)
-
-        return obs, reward, resetFlag, {}
+        next_obs, all_rewards, done, self.info = self._rail_env.step(self.action_dict)
+        return next_obs, all_rewards, done, self.info
 
     def reset(self):
         """
         Reset the state of the environment and returns an initial observation.
         return obs: initial observation of the space
         """
-        
-        """
-        ... Operations to reset, i.e.
-        self.current_position = 0.0
-        
-        ... Operations to get observations, i.e.
-        obs = self.get_state()
-        """
-        return self.get_state()
+        obs, self.info = self._rail_env.reset(True, True)
+        return obs
+
+
+    def render(self):
+        env_renderer = RenderTool(self._rail_env, gl="PILSVG")
+        env_renderer.render_env()
+        image = env_renderer.get_image()
+        cv2.imshow('sdasda', image)
+
+
+
+if __name__ == "__main__":
+    env = FooEnv()
+    env.reset()
+
+    for i in range(1000):
+        next_obs, all_rewards, done, info = env.step(np.random.randint(5))
+
+        print(f'Observation: {next_obs[0]}')
+        print(f'Rewards: {all_rewards}')
+
+        env.render()
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
