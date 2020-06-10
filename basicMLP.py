@@ -1,47 +1,45 @@
 #Basic Implementation using DQN in keras-rl
-
 import gym
+import env_pkg # <-- This is our env
+
 import tensorflow as tf
-from keras.models import Input, Model
-from keras.layers import Flatten, Dense, Concatenate, Reshape
-from keras.optimizers import Adam
-from keras import backend as K
+from tensorflow.keras import Input
+from tensorflow.keras.models import Model
+from tensorflow.keras.layers import Flatten, Dense, Concatenate, Reshape
+from tensorflow.keras.optimizers import Adam
+from tensorflow.keras import backend as K
 
 from rl.agents.dqn import DQNAgent
 from rl.policy import BoltzmannQPolicy
 from rl.memory import SequentialMemory
 from rl.random import OrnsteinUhlenbeckProcess
 
-cfg = tf.ConfigProto(allow_soft_placement=True )
-cfg.gpu_options.allow_growth = True
-
-
-n_cars = 10
 n_acts = 5
-min_obs = -1.0
-max_obs = 1.0
-n_nodes = 5
-n_features = 11
 
-env = gym.make('fooEnv_ID')
-env.__init__(n_cars, n_acts, min_obs, max_obs, n_nodes, n_features)
+env = gym.make('foo-v0', 
+    n_cars=1, 
+    n_acts=n_acts, 
+    min_obs=-1.0, 
+    max_obs=1.0, 
+    n_nodes=2, 
+    n_feats=11)
+env.__init__()
 
-car_layer = {}
 
 #Architecture, simple feed-forward dense net
-inp = Input(((1,) + env.observation_space.shape))
+inp = Input(shape=(1,231,))
 fl1 = Flatten()(inp)
 dn1 = Dense(100, activation='relu')(fl1)
-for i in range(n_cars):
-  car_layer["dnR"+str(i)] = Reshape([1,n_acts])(Dense(n_acts)(dn1))
-DQNModel = Model(input=inp, output=Concatenate(axis=1)([car_layer[x] for x in car_layer])) #Current output (n_cars x n_acts)
-                                                                                           #Can also have n_cars length vector with each position giving the car's action number
-                                                                                           #output = Dense(n_cars, activation='linear')(dn1)
+dn1 = Dense(100, activation='relu')(dn1)
+dn2 = Dense(n_acts, activation='linear')(dn1)
+
+DQNModel = Model(inp, dn2)
+DQNModel.summary()
 
 memory = SequentialMemory(limit=50000, window_length=1)
 policy = BoltzmannQPolicy()
 
-agentDQN = DQNAgent(model=DQNModel, nb_actions=n_acts, memory=memory, nb_steps_warmup=10,
+agentDQN = DQNAgent(model=DQNModel, nb_actions=n_acts, memory=memory, nb_steps_warmup=20,
                     target_model_update=1e-2, policy=policy)
-agentDQN.compile(Adam(lr=1e-3), metrics=['mae'])
-agentDQN.fit(env, nb_steps=10000, visualize=False)
+agentDQN.compile(Adam(lr=1e-4), metrics=['mae'])
+agentDQN.fit(env, nb_steps=10000, visualize=False, verbose=2)

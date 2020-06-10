@@ -1,3 +1,3 @@
 from gym.envs.registration import register
 
-register(id="fooEnv_ID", entry_point="env_pkg.envs:fooEnv")
+register(id="foo-v0", entry_point="env_pkg.envs:FooEnv")
