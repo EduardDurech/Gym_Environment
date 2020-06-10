@@ -1,4 +1,5 @@
 #Basic Implementation using DQN in keras-rl
+import sys
 import gym
 import env_pkg # <-- This is our env
 
@@ -14,38 +15,57 @@ from rl.policy import BoltzmannQPolicy
 from rl.memory import SequentialMemory
 from rl.random import OrnsteinUhlenbeckProcess
 
-n_acts = 5
 
-env = gym.make('foo-v0', 
-    n_cars=1, 
-    n_acts=n_acts, 
-    min_obs=-1.0, 
-    max_obs=1.0, 
-    n_nodes=2, 
-    n_feats=11)
-env.__init__()
+def build_agent(n_acts=5):
+    #Architecture, simple feed-forward dense net
+    inp = Input(shape=(1,231,))
+    fl1 = Flatten()(inp)
+    dn1 = Dense(100, activation='relu')(fl1)
+    dn1 = Dense(100, activation='relu')(dn1)
+    dn2 = Dense(n_acts, activation='linear')(dn1)
+    DQNModel = Model(inp, dn2)
+    DQNModel.summary()
+
+    memory = SequentialMemory(limit=50000, window_length=1)
+    policy = BoltzmannQPolicy()
+    agentDQN = DQNAgent(model=DQNModel, nb_actions=n_acts, memory=memory, nb_steps_warmup=50,
+                        target_model_update=1e-2, policy=policy)
+    agentDQN.compile(Adam(lr=1e-2), metrics=['mae'])
+    return agentDQN
 
 
-#Architecture, simple feed-forward dense net
-inp = Input(shape=(1,231,))
-fl1 = Flatten()(inp)
-dn1 = Dense(100, activation='relu')(fl1)
-dn1 = Dense(100, activation='relu')(dn1)
-dn2 = Dense(n_acts, activation='linear')(dn1)
+def train():
+    n_acts = 5
 
-DQNModel = Model(inp, dn2)
-DQNModel.summary()
+    env = gym.make('foo-v0', 
+        n_cars=1, 
+        n_acts=n_acts, 
+        min_obs=-1.0, 
+        max_obs=1.0, 
+        n_nodes=2, 
+        n_feats=11)
+    env.__init__()
 
-memory = SequentialMemory(limit=50000, window_length=1)
-policy = BoltzmannQPolicy()
+    agentDQN = build_agent(n_acts)
+    agentDQN.fit(env, nb_steps=10000, visualize=False, verbose=2)
 
-agentDQN = DQNAgent(model=DQNModel, nb_actions=n_acts, memory=memory, nb_steps_warmup=50,
-                    target_model_update=1e-2, policy=policy)
-agentDQN.compile(Adam(lr=1e-4), metrics=['mae'])
-agentDQN.fit(env, nb_steps=10000, visualize=False, verbose=2)
+    # After training is done, we save the final weights.
+    agentDQN.save_weights('dqn_{}_weights.h5f'.format('flatland'), overwrite=True)
+    test(env, agent=agentDQN)
 
-# After training is done, we save the final weights.
-agentDQN.save_weights('dqn_{}_weights.h5f'.format('flatland'), overwrite=True)
 
-# Finally, evaluate our algorithm for 5 episodes.
-agentDQN.test(env, nb_episodes=5, visualize=True)
+def test(env, path='dqn_flatland_weights.h5f', agent=None):
+    if agent is None:
+        agent = build_agent()
+    # Finally, evaluate our algorithm for 5 episodes.
+    agent.test(env, nb_episodes=5, visualize=True)
+
+
+if __name__ == "__main__":
+    if len(sys.argv) > 1:
+        if 'train' in sys.argv[1].lower():
+            train()
+
+        elif 'test' in sys.argv[1].lower():
+            test()
+    

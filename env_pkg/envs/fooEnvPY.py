@@ -77,6 +77,8 @@ class FooEnv(gym.Env):
         """
 
         # Agent action + observation
+        if not self.info['action_required']:
+            action = 0
         self.action_dict.update({0: action})
         next_obs, all_rewards, done, self.info = self._rail_env.step(self.action_dict)
 
