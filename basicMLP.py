@@ -39,7 +39,13 @@ DQNModel.summary()
 memory = SequentialMemory(limit=50000, window_length=1)
 policy = BoltzmannQPolicy()
 
-agentDQN = DQNAgent(model=DQNModel, nb_actions=n_acts, memory=memory, nb_steps_warmup=20,
+agentDQN = DQNAgent(model=DQNModel, nb_actions=n_acts, memory=memory, nb_steps_warmup=50,
                     target_model_update=1e-2, policy=policy)
 agentDQN.compile(Adam(lr=1e-4), metrics=['mae'])
 agentDQN.fit(env, nb_steps=10000, visualize=False, verbose=2)
+
+# After training is done, we save the final weights.
+agentDQN.save_weights('dqn_{}_weights.h5f'.format('flatland'), overwrite=True)
+
+# Finally, evaluate our algorithm for 5 episodes.
+agentDQN.test(env, nb_episodes=5, visualize=True)

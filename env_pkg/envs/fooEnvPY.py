@@ -43,12 +43,12 @@ np.random.seed(1)
 class FooEnv(gym.Env):
     def __init__(self, n_cars=1, n_acts=5, min_obs=-1, max_obs=1, n_nodes=2, n_feats=11, ob_radius=10):
 
+        self.total_feats = n_nodes*n_feats*ob_radius+n_feats
         self.action_space = spaces.Tuple([spaces.Discrete(n_acts)]*n_cars) 
-        self.observation_space = spaces.Box(low=min_obs, high=max_obs, shape=(n_cars, n_nodes*n_feats*ob_radius), dtype=np.float32)
+        self.observation_space = spaces.Box(low=min_obs, high=max_obs, shape=(n_cars, self.total_feats), dtype=np.float32)
         self.n_cars = n_cars
         self.n_nodes = n_nodes
         self.ob_radius = ob_radius
-        self.total_feats = n_nodes*n_feats*ob_radius
 
         self._rail_env = RailEnv(
             width=x_dim,
@@ -84,7 +84,7 @@ class FooEnv(gym.Env):
         if done[0]:
             print(done)
             # FIXME: This is probably a stupid way to return the final observation, but keras rl seems to expect one
-            return np.zeros((total_feats)), all_rewards[0], True, {}
+            return np.zeros((self.total_feats)), all_rewards[0], True, {}
 
         # Only normalise observation if we're not done yet 
         else:
