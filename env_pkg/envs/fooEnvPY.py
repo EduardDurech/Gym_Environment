@@ -50,8 +50,9 @@ class FooEnv(gym.Env):
                                                                            #spaces.Box(low=0, high=n_acts, shape=(n_cars,), dtype=np.float32), would need to round in step()
 
         # Define Observation Space using spaces as in Action, in a spaces.Box there must be a [low, high]
-        self.observation_space = spaces.Box(low=min_obs, high=max_obs, shape=(n_cars, n_nodes*n_features), dtype=np.float32) #(n_cars x n_nodes*n_features) Continuous vector [min_obs, max_obs]
-                                                                                                                            #If normalizing, set min_obs=-1, max_obs=1
+        self.observation_space = spaces.Box(low=min_obs, high=max_obs, shape=(n_cars, n_nodes, n_features), dtype=np.float32) #(n_cars x n_nodes x n_features) Continuous vector [min_obs, max_obs]
+                                                                                                                              #If normalizing, set min_obs=-1, max_obs=1,
+                                                                                                                              #can also do (n_cars x n_nodes*n_features)
 
         self._rail_env = RailEnv(
             width=x_dim,
