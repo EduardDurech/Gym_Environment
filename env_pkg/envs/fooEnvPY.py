@@ -41,17 +41,16 @@ random.seed(1)
 np.random.seed(1)
 
 class FooEnv(gym.Env):
-    def __init__(self):
-        self.minPositionX = 0.0
-        self.maxPositionX = 0.0 #Example vars for Observation of x position
+    def __init__(self, n_cars, n_acts, min_obs, max_obs, n_nodes, n_features):
 
         # Define Action Space, see https://github.com/openai/gym/tree/master/gym/spaces for types
         # spaces.Discrete(5) will create 5 discrete possible actions, which will be passed as a
         # an integer to step(...) as the var action in range [0, n-1] with n actions
-        self.action_space = spaces.Discrete(5)
+        self.action_space = spaces.Tuple([spaces.Discrete(n_acts)]*n_cars) #(n_cars x n_acts) Discrete vector
 
         # Define Observation Space using spaces as in Action, in a spaces.Box there must be a [low, high]
-        # self.observation_space = spaces.Box(self.minPositionX, self.maxPositionX)
+        self.observation_space = space.Box(low=min_obs, high=max_obs, shape=(n_cars, n_nodes*n_features), dtype=np.float32) #(n_cars x n_nodes*n_features) Continuous vector [min_obs, max_obs]
+                                                                                                                            #If normalizing, set min_obs=-1, max_obs=1
 
         self._rail_env = RailEnv(
             width=x_dim,
