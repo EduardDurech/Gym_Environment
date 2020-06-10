@@ -16,9 +16,9 @@ from rl.memory import SequentialMemory
 from rl.random import OrnsteinUhlenbeckProcess
 
 
-def build_agent(n_acts=5):
+def build_agent(n_acts=5, n_feats=231):
     #Architecture, simple feed-forward dense net
-    inp = Input(shape=(1,231,))
+    inp = Input(shape=(1, n_feats))
     fl1 = Flatten()(inp)
     dn1 = Dense(100, activation='relu')(fl1)
     dn1 = Dense(100, activation='relu')(dn1)
@@ -34,9 +34,7 @@ def build_agent(n_acts=5):
     return agentDQN
 
 
-def train():
-    n_acts = 5
-
+def build_env(n_acts):
     env = gym.make('foo-v0', 
         n_cars=1, 
         n_acts=n_acts, 
@@ -44,10 +42,15 @@ def train():
         max_obs=1.0, 
         n_nodes=2, 
         n_feats=11)
-    env.__init__()
+    return env
+
+
+def train():
+    n_acts = 5
+    env = build_env(n_acts)
 
     agentDQN = build_agent(n_acts)
-    agentDQN.fit(env, nb_steps=10000, visualize=False, verbose=2)
+    agentDQN.fit(env, nb_steps=10000, visualize=True, verbose=2)
 
     # After training is done, we save the final weights.
     agentDQN.save_weights('dqn_{}_weights.h5f'.format('flatland'), overwrite=True)
@@ -67,5 +70,5 @@ if __name__ == "__main__":
             train()
 
         elif 'test' in sys.argv[1].lower():
-            test()
+            test(build_env())
     
