@@ -16,6 +16,13 @@ cfg = tf.ConfigProto(allow_soft_placement=True )
 cfg.gpu_options.allow_growth = True
 
 
+n_cars = 10
+n_acts = 5
+min_obs = -1.0
+max_obs = 1.0
+n_nodes = 5
+n_features = 11
+
 env = gym.make('fooEnv_ID')
 env.__init__(n_cars, n_acts, min_obs, max_obs, n_nodes, n_features)
 
