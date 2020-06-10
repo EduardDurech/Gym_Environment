@@ -18,7 +18,7 @@ cfg.gpu_options.allow_growth = True
 
 env = gym.make('fooEnv_ID')
 
-n_actions = env.action_space.n  #This will depend on the space you use, i.e. an action_space box would be env.action_space.shape[0]
+n_actions = env.action_space.n  #This will depend on the space you use, e.g. an action_space in box could be env.action_space.shape[0]
                                 #reference https://github.com/openai/gym/tree/master/gym/spaces
 
 
