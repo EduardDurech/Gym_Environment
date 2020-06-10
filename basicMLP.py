@@ -40,7 +40,7 @@ def build_env(n_acts):
         n_acts=n_acts, 
         min_obs=-1.0, 
         max_obs=1.0, 
-        n_nodes=2, 
+        n_nodes=3, 
         n_feats=11)
     return env
 
@@ -49,7 +49,7 @@ def train():
     n_acts = 5
     env = build_env(n_acts)
 
-    agentDQN = build_agent(n_acts)
+    agentDQN = build_agent(n_acts, env.total_feats)
     agentDQN.fit(env, nb_steps=10000, visualize=True, verbose=2)
 
     # After training is done, we save the final weights.

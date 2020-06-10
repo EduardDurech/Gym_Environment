@@ -24,7 +24,7 @@ x_dim = 36
 y_dim = 36
 
 # Custom observation builder
-TreeObservation = TreeObsForRailEnv(max_depth=2, predictor=ShortestPathPredictorForRailEnv(30))
+
 # Different agent types (trains) with different speeds.
 speed_ration_map = {1.: 0.25,  # Fast passenger train
                     1. / 2.: 0.25,  # Fast freight train
@@ -43,8 +43,8 @@ np.random.seed(1)
 class FooEnv(gym.Env):
     def __init__(self, n_cars=1, n_acts=5, min_obs=-1, max_obs=1, n_nodes=2, n_feats=11, ob_radius=10):
 
-
-        self.total_feats = n_nodes*n_feats*ob_radius+n_feats
+        self.tree_obs = TreeObsForRailEnv(max_depth=n_nodes, predictor=ShortestPathPredictorForRailEnv(30))
+        self.total_feats = n_feats * sum([4**i for i in range(n_nodes+1)])
         self.action_space = spaces.Tuple([spaces.Discrete(n_acts)]*n_cars) 
         self.observation_space = spaces.Box(low=min_obs, high=max_obs, shape=(n_cars, self.total_feats), dtype=np.float32)
         self.n_cars = n_cars
@@ -63,7 +63,7 @@ class FooEnv(gym.Env):
             schedule_generator=sparse_schedule_generator(speed_ration_map),
             number_of_agents=n_cars,
             malfunction_generator_and_process_data=malfunction_from_params(stochastic_data),
-            obs_builder_object=TreeObservation)
+            obs_builder_object=self.tree_obs)
         self.renderer = RenderTool(self._rail_env, gl="PILSVG")
 
         self.action_dict = dict()
@@ -103,7 +103,7 @@ class FooEnv(gym.Env):
         """
         obs, self.info = self._rail_env.reset(True, True)
         obs = normalize_observation(obs[0], self.n_nodes, self.ob_radius)
-        self.renderer = RenderTool(self._rail_env, gl="PILSVG")
+        self.renderer.reset()
         return obs
 
     def render(self, mode):
@@ -111,4 +111,4 @@ class FooEnv(gym.Env):
         self.renderer.render_env()
         image = self.renderer.get_image()
         cv2.imshow('Render', image)
-        cv2.waitKey(40)
+        cv2.waitKey(20)
