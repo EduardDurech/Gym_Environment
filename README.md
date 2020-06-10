@@ -21,6 +21,8 @@ import env_pkg
 env = gym.make('fooEnv_ID')
 ```
 
+See basicMLP.py for use with keras-rl
+
 
 ##Note: This is meant as an absolute minimal requirement for creating a Gym Environment.
 This does *NOT* check dependencies, log, or do anything fancy. See https://github.com/MartinThoma/banana-gym for further additions
