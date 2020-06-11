@@ -33,7 +33,7 @@ fl1 = Flatten()(inp)
 dn1 = Dense(100, activation='relu')(fl1)
 for i in range(n_cars):
   car_layer["dnR"+str(i)] = Reshape([1,n_acts])(Dense(n_acts)(dn1))
-modelDQN = Model(input=inp, output=Concatenate(axis=1)([car_layer[x] for x in car_layer])) #Current output (n_cars x n_acts)
+modelDQN = Model(input=inp, output=Concatenate(axis=1)(list(car_layer.values()))) #Current output (n_cars x n_acts)
                                                                                            #Can also have n_cars length vector with each position giving the car's action number
                                                                                            #output = Dense(n_cars, activation='linear')(dn1)
 
