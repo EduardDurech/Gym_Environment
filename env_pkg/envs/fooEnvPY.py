@@ -81,6 +81,9 @@ class FooEnv(gym.Env):
         # Agent action + observation
         if not self.info['action_required']:
             action = 0
+            self.update_agent = False
+        else:
+            self.update_agent = True
         self.action_dict.update({0: action})
         next_obs, all_rewards, done, self.info = self._rail_env.step(self.action_dict)
 
@@ -88,12 +91,14 @@ class FooEnv(gym.Env):
         if done[0]:
             print(done)
             # FIXME: This is probably a stupid way to return the final observation, but keras rl seems to expect one
-            return np.zeros((self.total_feats)), all_rewards[0], True, {}
+            return self.old_obs, all_rewards[0], True, {}
 
         # Only normalise observation if we're not done yet 
         else:
-            next_obs = normalize_observation(next_obs[0], self.n_nodes, self.ob_radius)
-            return next_obs, all_rewards[0], done[0], {}
+            if self.update_agent:
+                next_obs = normalize_observation(next_obs[0], self.n_nodes, self.ob_radius)
+                self.old_obs = next_obs.copy()
+                return next_obs, all_rewards[0], done[0], {}
 
 
     def reset(self):

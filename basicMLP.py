@@ -50,7 +50,7 @@ def train():
     env = build_env(n_acts)
 
     agentDQN = build_agent(n_acts, env.total_feats)
-    agentDQN.fit(env, nb_steps=10000, visualize=True, verbose=2)
+    agentDQN.fit(env, nb_steps=100000, visualize=False, verbose=2)
 
     # After training is done, we save the final weights.
     agentDQN.save_weights('dqn_{}_weights.h5f'.format('flatland'), overwrite=True)
