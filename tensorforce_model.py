@@ -5,7 +5,7 @@ import env_pkg
 
 # Pre-defined or custom environment
 environment = Environment.create(
-    environment='gym', level='foo-v0', max_episode_timesteps=500
+    environment='gym', level='foo-v0', max_episode_timesteps=500, visualize=True
 )
 
 # Instantiate a Tensorforce agent

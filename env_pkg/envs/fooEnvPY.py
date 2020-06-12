@@ -37,8 +37,8 @@ stochastic_data = MalfunctionParameters(malfunction_rate=1/10000,  # Rate of mal
                                         max_duration=50  # Max duration of malfunction
                                         )
 
-random.seed(1)
-np.random.seed(1)
+random.seed(10)
+np.random.seed(10)
 
 class FooEnv(gym.Env):
     def __init__(self, n_cars=3 , n_acts=5, min_obs=-1, max_obs=1, n_nodes=2, n_feats=11, ob_radius=10):
@@ -56,7 +56,7 @@ class FooEnv(gym.Env):
             height=y_dim,
             rail_generator=sparse_rail_generator(max_num_cities=3,
                                                 # Number of cities in map (where train stations are)
-                                                seed=1,  # Random seed
+                                                seed=500,  # Random seed
                                                 grid_mode=False,
                                                 max_rails_between_cities=2,
                                                 max_rails_in_city=3),
@@ -69,6 +69,7 @@ class FooEnv(gym.Env):
         self.action_dict = dict()
         self.info = dict()
         self.updates = dict()
+        self.old_obs = dict()
 
 
     def step(self, action):
@@ -90,7 +91,7 @@ class FooEnv(gym.Env):
                 self.updates[agent_id] = False
                 action[agent_id] = 0
             self.action_dict.update({agent_id: action[agent_id]})
-
+        print(self.action_dict)
         next_obs, all_rewards, done, self.info = self._rail_env.step(self.action_dict)
 
         # if done['__all__']:
@@ -100,9 +101,11 @@ class FooEnv(gym.Env):
 
         for agent_id in range(self._rail_env.get_num_agents()):
             # Check if agent is finished
-            # if not done[agent_id] and self.updates[agent_id]:
-            next_obs[agent_id] = normalize_observation(next_obs[agent_id], self.n_nodes, self.ob_radius)
-        self.old_obs = next_obs.copy()
+            if not done[agent_id] and self.updates[agent_id]:
+                next_obs[agent_id] = normalize_observation(next_obs[agent_id], self.n_nodes, self.ob_radius)
+            else:
+                next_obs[agent_id] = self.old_obs[agent_id]
+            self.old_obs[agent_id] = next_obs[agent_id].copy()
         feats = [f.reshape(1,-1) for f in next_obs.values()]
         next_obs = np.concatenate(feats)
         return next_obs, sum(all_rewards.values()), done['__all__'], {}
@@ -121,7 +124,7 @@ class FooEnv(gym.Env):
         self.renderer.reset()
         return obs
 
-    def render(self, mode):
+    def render(self, mode=None):
         
         self.renderer.render_env()
         image = self.renderer.get_image()
