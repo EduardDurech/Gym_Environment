@@ -41,11 +41,11 @@ random.seed(1)
 np.random.seed(1)
 
 class FooEnv(gym.Env):
-    def __init__(self, n_cars=1, n_acts=5, min_obs=-1, max_obs=1, n_nodes=2, n_feats=11, ob_radius=10):
+    def __init__(self, n_cars=3 , n_acts=5, min_obs=-1, max_obs=1, n_nodes=2, n_feats=11, ob_radius=10):
 
         self.tree_obs = TreeObsForRailEnv(max_depth=n_nodes, predictor=ShortestPathPredictorForRailEnv(30))
         self.total_feats = n_feats * sum([4**i for i in range(n_nodes+1)])
-        self.action_space = spaces.Tuple([spaces.Discrete(n_acts)]*n_cars) 
+        self.action_space = spaces.MultiDiscrete([n_acts]*n_cars)
         self.observation_space = spaces.Box(low=min_obs, high=max_obs, shape=(n_cars, self.total_feats), dtype=np.float32)
         self.n_cars = n_cars
         self.n_nodes = n_nodes
@@ -68,6 +68,7 @@ class FooEnv(gym.Env):
 
         self.action_dict = dict()
         self.info = dict()
+        self.updates = dict()
 
 
     def step(self, action):
@@ -78,27 +79,33 @@ class FooEnv(gym.Env):
             see https://gym.openai.com/docs/#observations
         """
 
-        # Agent action + observation
-        if not self.info['action_required']:
-            action = 0
-            self.update_agent = False
-        else:
-            self.update_agent = True
-        self.action_dict.update({0: action})
+        print(action)
+
+        for agent_id in range(self._rail_env.get_num_agents()):
+
+            # Agent action + observation
+            if self.info['action_required'][agent_id]:
+                self.updates[agent_id] = True
+            else:
+                self.updates[agent_id] = False
+                action[agent_id] = 0
+            self.action_dict.update({agent_id: action[agent_id]})
+
         next_obs, all_rewards, done, self.info = self._rail_env.step(self.action_dict)
 
-        # Check if agent is finished
-        if done[0]:
-            print(done)
-            # FIXME: This is probably a stupid way to return the final observation, but keras rl seems to expect one
-            return self.old_obs, all_rewards[0], True, {}
+        # if done['__all__']:
+        #     print(done)
+        #     # FIXME: This is probably a stupid way to return the final observation, but keras rl seems to expect one
+        #     return self.old_obs, all_rewards, True, {}
 
-        # Only normalise observation if we're not done yet 
-        else:
-            if self.update_agent:
-                next_obs = normalize_observation(next_obs[0], self.n_nodes, self.ob_radius)
-                self.old_obs = next_obs.copy()
-                return next_obs, all_rewards[0], done[0], {}
+        for agent_id in range(self._rail_env.get_num_agents()):
+            # Check if agent is finished
+            # if not done[agent_id] and self.updates[agent_id]:
+            next_obs[agent_id] = normalize_observation(next_obs[agent_id], self.n_nodes, self.ob_radius)
+        self.old_obs = next_obs.copy()
+        feats = [f.reshape(1,-1) for f in next_obs.values()]
+        next_obs = np.concatenate(feats)
+        return next_obs, sum(all_rewards.values()), done['__all__'], {}
 
 
     def reset(self):
@@ -107,7 +114,10 @@ class FooEnv(gym.Env):
         return obs: initial observation of the space
         """
         obs, self.info = self._rail_env.reset(True, True)
-        obs = normalize_observation(obs[0], self.n_nodes, self.ob_radius)
+        for agent_id in range(self._rail_env.get_num_agents()):
+            obs[agent_id] = normalize_observation(obs[agent_id], self.n_nodes, self.ob_radius)
+        feats = [f.reshape(1,-1) for f in obs.values()]
+        obs = np.concatenate(feats)
         self.renderer.reset()
         return obs
 

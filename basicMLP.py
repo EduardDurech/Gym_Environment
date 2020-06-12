@@ -10,19 +10,40 @@ from tensorflow.keras.layers import Flatten, Dense, Concatenate, Reshape
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras import backend as K
 
+from rl.core import Processor
+
 from rl.agents.dqn import DQNAgent
 from rl.policy import BoltzmannQPolicy
 from rl.memory import SequentialMemory
 from rl.random import OrnsteinUhlenbeckProcess
 
 
-def build_agent(n_acts=5, n_feats=231):
+class GangstaProcessor(Processor):
+    def __init__(self):
+        super().__init__()
+
+    def process_step(self, observation, r, done, info):
+        print(f'Step: {observation}, {r}, {done}, {info}')
+        return observation, r, done, info
+
+    def process_action(self, action):
+        print(f'Action: {action}')
+        return action
+
+    def process_observation(self, observation):
+        print(f'Observation: {observation}')
+        return observation
+
+proc = GangstaProcessor()
+
+def build_agent(n_acts=5, n_agents=2, n_feats=231):
     #Architecture, simple feed-forward dense net
-    inp = Input(shape=(1, n_feats))
+    inp = Input(shape=(n_agents, n_feats))
     fl1 = Flatten()(inp)
     dn1 = Dense(100, activation='relu')(fl1)
     dn1 = Dense(100, activation='relu')(dn1)
-    dn2 = Dense(n_acts, activation='linear')(dn1)
+    dn2 = Dense(5, activation='linear')(dn1)
+    # dn2 = Reshape((n_acts, n_agents))(dn2)
     DQNModel = Model(inp, dn2)
     DQNModel.summary()
 
@@ -34,9 +55,9 @@ def build_agent(n_acts=5, n_feats=231):
     return agentDQN
 
 
-def build_env(n_acts):
+def build_env(n_acts=5, n_agents=5):
     env = gym.make('foo-v0', 
-        n_cars=1, 
+        n_cars=n_agents, 
         n_acts=n_acts, 
         min_obs=-1.0, 
         max_obs=1.0, 
@@ -47,9 +68,10 @@ def build_env(n_acts):
 
 def train():
     n_acts = 5
-    env = build_env(n_acts)
+    n_agents = 3
+    env = build_env(n_acts, n_agents)
 
-    agentDQN = build_agent(n_acts, env.total_feats)
+    agentDQN = build_agent(n_acts, n_agents, env.total_feats)
     agentDQN.fit(env, nb_steps=100000, visualize=False, verbose=2)
 
     # After training is done, we save the final weights.
