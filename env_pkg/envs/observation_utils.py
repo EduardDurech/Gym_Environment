@@ -7,28 +7,28 @@ def max_lt(seq, val):
     Return greatest item in seq for which item < val applies.
     None is returned if seq was empty or all items in seq were >= val.
     """
-    max = 0
-    idx = len(seq) - 1
-    while idx >= 0:
-        if seq[idx] < val and seq[idx] >= 0 and seq[idx] > max:
-            max = seq[idx]
-        idx -= 1
-    return max
+    if list(seq):
+        np_seq = np.array(seq)
+        condition_array = np.logical_and(np_seq < val, np_seq >=0) 
+        if condition_array.any():
+            return np.min(np_seq[condition_array])
+        else: None
+    else: None
 
 
 def min_gt(seq, val):
     """
     Return smallest item in seq for which item > val applies.
-    None is returned if seq was empty or all items in seq were >= val.
+    None is returned if seq was empty or all items in seq were < val.
     """
-    min = np.inf
-    idx = len(seq) - 1
-    while idx >= 0:
-        if seq[idx] >= val and seq[idx] < min:
-            min = seq[idx]
-        idx -= 1
-    return min
-
+    if list(seq):
+        np_seq = np.array(seq)
+        condition_array = np_seq > val
+        if condition_array.any():
+            return np.min(np_seq[condition_array])
+        else: None
+    else: None
+    
 
 def norm_obs_clip(obs, clip_min=-1, clip_max=1, fixed_radius=0, normalize_to_range=False):
     """
@@ -59,7 +59,11 @@ def _split_node_into_feature_groups(node: TreeObsForRailEnv.Node) -> (np.ndarray
     distance = np.zeros(1)
     agent_data = np.zeros(4)
     if node is None:
-        print('FUCK ME, NO OBSERVATION?')
+        print('DUCK ME, NO OBSERVATION?')
+        """maybe?
+        raise ValueError("No Node have been given to observe")
+
+        """
     data[0] = node.dist_own_target_encountered
     data[1] = node.dist_other_target_encountered
     data[2] = node.dist_other_agent_encountered
