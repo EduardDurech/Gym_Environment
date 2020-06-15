@@ -5,6 +5,8 @@ setup(
     version="0.0",
     install_requires=[
           'tensorflow==2.2.0',
+          'Tensorforce==0.5.4',
+          'opencv-python==4.2.0.34',
           'keras-rl==0.4.2',
           'flatland-rl==2.2.1',
           'numpy==1.18.5',
