@@ -1,0 +1,3 @@
+[submodule "flatland_training"]
+	path = flatland_training
+	url = https://github.com/mitchellgoffpc/flatland-training.git/

@@ -1,8 +1,8 @@
 
-from env_pkg.envs.fooEnvPY import FooEnv
+from collections import deque
 import numpy as np
 from dqn import Agent
-from collections import deque
+from fl_environment import FooEnv
 
 environment = FooEnv(
         n_cars=1, 
