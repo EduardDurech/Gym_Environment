@@ -1,7 +1,6 @@
 ## TODO:
 ## - Build multi-agent adapter
 
-
 import gym
 from gym import spaces
 import numpy as np
@@ -13,12 +12,12 @@ from flatland.envs.rail_env import RailEnv
 from flatland.envs.rail_generators import sparse_rail_generator
 from flatland.envs.schedule_generators import sparse_schedule_generator
 from flatland.utils.rendertools import RenderTool
-from env_pkg.envs.observation_utils import normalize_observation
+from flatland_training.src.observation_utils import normalize_observation
 from flatland.envs.observations import TreeObsForRailEnv
 from flatland.envs.predictions import ShortestPathPredictorForRailEnv
 from flatland.envs.agent_utils import RailAgentStatus
 from flatland.envs.malfunction_generators import malfunction_from_params, MalfunctionParameters
-
+from flatland_training.src import tree_observation
 
 x_dim = 36
 y_dim = 36
@@ -43,13 +42,15 @@ np.random.seed(41)
 class FooEnv(gym.Env):
     def __init__(self, n_cars=3 , n_acts=5, min_obs=-1, max_obs=1, n_nodes=2, n_feats=11, ob_radius=10):
 
-        self.tree_obs = TreeObsForRailEnv(max_depth=n_nodes, predictor=ShortestPathPredictorForRailEnv(30))
+        self.tree_obs = tree_observation.TreeObservation(n_nodes)
         self.total_feats = n_feats * sum([4**i for i in range(n_nodes+1)])
-        self.action_space = spaces.MultiDiscrete([n_acts]*n_cars)
-        self.observation_space = spaces.Box(low=min_obs, high=max_obs, shape=(n_cars, self.total_feats), dtype=np.float32)
+        # self.action_space = spaces.MultiDiscrete([n_acts]*n_cars)
+        self.action_space = spaces.Discrete(5)
+        self.observation_space = spaces.Box(low=min_obs, high=max_obs, shape=(self.total_feats,), dtype=np.float32)
         self.n_cars = n_cars
         self.n_nodes = n_nodes
         self.ob_radius = ob_radius
+        
 
         self._rail_env = RailEnv(
             width=x_dim,
@@ -72,6 +73,17 @@ class FooEnv(gym.Env):
         self.old_obs = dict()
         self.cum_reward = dict()
 
+    # @property
+    def states(self):
+        return self.observation_space
+
+    # @property
+    def actions(self):
+        return self.action_space
+
+    def max_episode_timesteps(self):
+        return 10000
+
 
     def step(self, action):
         """
@@ -81,22 +93,21 @@ class FooEnv(gym.Env):
             see https://gym.openai.com/docs/#observations
         """
         # print(action)
-        for agent_id in range(self._rail_env.get_num_agents()):
 
-            # # Agent action + observation
-            # if self.info['action_required'][agent_id]:
-            #     self.updates[agent_id] = True
-            # else:
-            #     self.updates[agent_id] = False
-            #     action[agent_id] = 0
+        # agent_id, action = action
+
+
+
+        for agent_id in range(self._rail_env.get_num_agents()):
+            if self.info['action_required'][agent_id]:
+                self.updates[agent_id] = True
+            else:
+                self.updates[agent_id] = False
+                action[agent_id] = 0
             self.action_dict.update({agent_id: action[agent_id]})
-        # print(self.action_dict)
+
         next_obs, all_rewards, done, self.info = self._rail_env.step(self.action_dict)
 
-        # if done['__all__']:
-        #     print(done)
-        #     # FIXME: This is probably a stupid way to return the final observation, but keras rl seems to expect one
-        #     return self.old_obs, all_rewards, True, {}
 
         for agent_id in range(self._rail_env.get_num_agents()):
             # Check if agent is finished
@@ -110,14 +121,8 @@ class FooEnv(gym.Env):
             else:
                 next_obs[agent_id] = self.old_obs[agent_id]
             self.old_obs[agent_id] = next_obs[agent_id].copy()
-        feats = [f.reshape(1,-1) for f in next_obs.values()]
-        next_obs = np.concatenate(feats)
-        # print(f'DONE: {list(done.values()).count(True) / len(done.values())}')
 
-        for k, v in all_rewards.items():
-            all_rewards[k] = v + self.cum_reward[k]
-
-        return next_obs, sum(all_rewards.values()), done['__all__'], {}
+        return next_obs, all_rewards, done, {}
 
 
     def reset(self):
@@ -134,7 +139,8 @@ class FooEnv(gym.Env):
 
         obs, self.info = self._rail_env.reset(True, True)
         for agent_id in range(self._rail_env.get_num_agents()):
-            obs[agent_id] = normalize_observation(obs[agent_id], self.n_nodes, self.ob_radius)
+            if obs[agent_id]:
+                obs[agent_id] = normalize_observation(obs[agent_id], self.n_nodes, self.ob_radius)
         feats = [f.reshape(1,-1) for f in obs.values()]
         obs = np.concatenate(feats)
         self.renderer.reset()
