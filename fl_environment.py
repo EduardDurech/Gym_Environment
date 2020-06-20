@@ -114,7 +114,7 @@ class FlatlandEnv(gym.Env):
             if obs[agent_id]:
                 obs[agent_id] = normalize_observation(obs[agent_id], self.n_nodes, self.ob_radius)
         self.renderer.reset() 
-        return obs, info
+        return obs, self.info
 
 
     def render(self, mode=None):

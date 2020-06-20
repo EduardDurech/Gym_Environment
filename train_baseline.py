@@ -79,6 +79,5 @@ for episode in range(300):
 
     win_rate.append(perc_done or 0)
     print(f'Episode: {episode+1} Last 100 win rate: {np.mean(win_rate)}')
-    print(win_rate)
 
 environment.close()
