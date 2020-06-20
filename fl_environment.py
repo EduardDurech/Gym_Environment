@@ -97,7 +97,7 @@ class FlatlandEnv(gym.Env):
             # Keep track of last observation for trains that finish    
             self.old_obs[agent_id] = next_obs[agent_id].copy()
 
-        return next_obs, all_rewards, done, {}
+        return next_obs, all_rewards, done, self.info
 
 
     def reset(self):
@@ -114,7 +114,7 @@ class FlatlandEnv(gym.Env):
             if obs[agent_id]:
                 obs[agent_id] = normalize_observation(obs[agent_id], self.n_nodes, self.ob_radius)
         self.renderer.reset() 
-        return obs
+        return obs, info
 
 
     def render(self, mode=None):

@@ -38,7 +38,7 @@ agent = Agent(
 for episode in range(300):
 
     # Initialize episode
-    obs = environment.reset()
+    obs, info = environment.reset()
     steps = 0
     all_done = False
     while not all_done and steps < max_steps:
@@ -48,7 +48,8 @@ for episode in range(300):
         
         # Pick action for each agent
         for agent_id in range(environment.n_cars):
-            all_actions[agent_id] = agent.choose_action(obs[agent_id])
+            if info['action_required'][agent_id]:
+                all_actions[agent_id] = agent.choose_action(obs[agent_id])
 
         # Perform actions in environment
         states, reward, terminal, info = environment.step(action=all_actions)
@@ -62,12 +63,12 @@ for episode in range(300):
                 # Add state to memory
                 agent.remember(obs[agent_id], all_actions[agent_id], reward[agent_id], states[agent_id], terminal[agent_id])
                 
-                # Learn every 10 steps
-                if steps % learn_every == 0:
-                    agent.learn()
+        # Learn every 10 steps
+        if steps % learn_every == 0:
+            agent.learn()
             
-            # Update old states        
-            obs = states
+        # Update old states        
+        obs = states
 
         # Calculate percentage complete
         perc_done = [v for k, v in terminal.items() if k is not '__all__'].count(True)/environment.n_cars
