@@ -1,10 +1,21 @@
-
 from collections import deque
 import numpy as np
 from dqn import Agent
-from fl_environment import FooEnv
+from fl_environment import FlatlandEnv
 
-environment = FooEnv(
+
+# Keep track of last 100 results
+win_rate = deque(maxlen=100)
+
+# Env params
+x_dim = 36 # TODO: random sampling
+y_dim = 36 #
+max_steps = 8 * (x_dim + y_dim) - 1
+learn_every = 10
+
+environment = FlatlandEnv(
+        x_dim=x_dim,
+        y_dim=y_dim,
         n_cars=1, 
         n_acts=5, 
         min_obs=-1.0, 
@@ -14,7 +25,7 @@ environment = FooEnv(
 ) 
 
 agent = Agent(
-    alpha=0.001, 
+    alpha=0.0001, 
     gamma=0.99, 
     epsilon=1.0, 
     input_shape=5, 
@@ -23,35 +34,50 @@ agent = Agent(
 )
 
 
-win_rate = deque(maxlen=100)
-
 # Train for 300 episodes
 for episode in range(300):
 
     # Initialize episode
     obs = environment.reset()
-    terminal = {'__all__': False}
-    score = 0.0
     steps = 0
-    while not terminal['__all__'] and steps < 8 * (36 + 36) - 1:
-        all_actions = [None] * environment._rail_env.get_num_agents()
-        for agent_id in range(environment._rail_env.get_num_agents()):
+    all_done = False
+    while not all_done and steps < max_steps:
+
+        # Clear action buffer
+        all_actions = [None] * environment.n_cars
+        
+        # Pick action for each agent
+        for agent_id in range(environment.n_cars):
             all_actions[agent_id] = agent.choose_action(obs[agent_id])
+
+        # Perform actions in environment
         states, reward, terminal, info = environment.step(action=all_actions)
-        # print(terminal[0])
-        score += sum(reward.values())
-        for agent_id in range(len(states)):
+
+        # Learn from taken actions
+        for agent_id in range(environment.n_cars):
+            
+            # If agent took an action or completed
             if all_actions[agent_id] is not None or terminal[agent_id]:
+                
+                # Add state to memory
                 agent.remember(obs[agent_id], all_actions[agent_id], reward[agent_id], states[agent_id], terminal[agent_id])
-                agent.learn()
+                
+                # Learn every 10 steps
+                if steps % learn_every == 0:
+                    agent.learn()
+            
+            # Update old states        
             obs = states
-        perc_done = [v for k, v in terminal.items() if k is not '__all__'].count(True)/environment._rail_env.get_num_agents()
-        # print(f'{score} ----- {perc_done}')
-        # environment.render()
+
+        # Calculate percentage complete
+        perc_done = [v for k, v in terminal.items() if k is not '__all__'].count(True)/environment.n_cars
+
+        # We done yet?
+        all_done = terminal['__all__']
         steps += 1
+
     win_rate.append(perc_done or 0)
     print(f'Episode: {episode+1} Last 100 win rate: {np.mean(win_rate)}')
     print(win_rate)
-
 
 environment.close()

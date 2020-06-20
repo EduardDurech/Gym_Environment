@@ -1,5 +1,6 @@
+import os
 import tensorflow as tf
-tf.config.set_visible_devices([], 'GPU')
+# tf.config.set_visible_devices([], 'GPU')
 import numpy as np
 
 class ReplayBuffer:
@@ -67,7 +68,7 @@ class Agent:
         self.batch_size = batch_size
         self.model_file = fname
         self.memory = ReplayBuffer(mem_size, input_shape, n_actions, discrete=True)
-        self.q_eval = build_dqn(alpha, n_actions, input_shape, 256, 256)
+        self.q_eval = build_dqn(alpha, n_actions, input_shape, 128, 128)
 
     def remember(self, state, action, reward, new_state, done):
         self.memory.store_transition(state, action, reward, new_state, done)
@@ -99,7 +100,7 @@ class Agent:
 
         q_target[batch_index, action_indices] = reward + self.gamma * np.max(q_next, axis=1)*done
 
-        _ = self.q_eval.fit(state, q_target, verbose=0)
+        _ = self.q_eval.fit(state, q_target, verbose=1)
 
         self.epsilon = self.epsilon * self.epsilon_decay if self.epsilon > \
             self.epsilon_min else self.epsilon_min
