@@ -68,7 +68,7 @@ class Agent:
         self.batch_size = batch_size
         self.model_file = fname
         self.memory = ReplayBuffer(mem_size, input_shape, n_actions, discrete=True)
-        self.q_eval = build_dqn(alpha, n_actions, input_shape, 128, 128)
+        self.q_eval = build_dqn(alpha, n_actions, input_shape, 64, 64)
 
     def remember(self, state, action, reward, new_state, done):
         self.memory.store_transition(state, action, reward, new_state, done)
@@ -100,10 +100,12 @@ class Agent:
 
         q_target[batch_index, action_indices] = reward + self.gamma * np.max(q_next, axis=1)*done
 
-        _ = self.q_eval.fit(state, q_target, verbose=0)
+        loss = self.q_eval.fit(state, q_target, verbose=0)
 
         self.epsilon = self.epsilon * self.epsilon_decay if self.epsilon > \
             self.epsilon_min else self.epsilon_min
+
+        return loss
 
     def save_model(self):
         self.q_eval.save(self.model_file)
