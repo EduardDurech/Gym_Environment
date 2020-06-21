@@ -1,6 +1,7 @@
+import matplotlib.pyplot as plt
 from collections import deque
 import numpy as np
-from dqn import Agent
+from dqn import DQNAgent, DoubleDQNAgent
 from fl_environment import FlatlandEnv
 
 import time
@@ -13,10 +14,10 @@ episode_duration = deque(maxlen=100)
 # Env params
 n_actions = 5
 n_agents = 1
-x_dim = 32 # TODO: random sampling
-y_dim = 32 #
+x_dim = 32 
+y_dim = 32 
 max_steps = 8 * (x_dim + y_dim) - 1
-learn_every = 10
+learn_every = 1
 
 # Flatland Environment
 environment = FlatlandEnv(
@@ -31,12 +32,12 @@ environment = FlatlandEnv(
 ) 
 
 # Simple DQN agent
-agent = Agent(
-    alpha=0.0001, 
+agent = DQNAgent(
+    alpha=0.0005, 
     gamma=0.99, 
     epsilon=1.0, 
-    input_shape=5, 
-    batch_size=64, 
+    input_shape=25, 
+    batch_size=512, 
     n_actions=n_actions
 )
 
@@ -44,14 +45,15 @@ agent = Agent(
 action_probs = [1] * n_actions
 
 # Train for 300 episodes
-for episode in range(300):
+for episode in range(1000):
     start = time.time()
+
     # Initialize episode
     old_states, info = environment.reset()
     steps = 0
     all_done = False
-    while not all_done and steps < max_steps:
 
+    while not all_done and steps < max_steps:
         # Clear action buffer
         all_actions = [None] * environment.n_cars
 
@@ -69,14 +71,13 @@ for episode in range(300):
         for agent_id in range(environment.n_cars):
             # If agent took an action or completed
             if all_actions[agent_id] is not None or terminal[agent_id]:
-                
                 # Add state to memory
                 agent.remember(old_states[agent_id], all_actions[agent_id], reward[agent_id], states[agent_id], terminal[agent_id])
-                
-        # Learn every N steps
-        if steps % learn_every == 0:
-            agent.learn()
-            
+        
+                # Learn
+                if steps + 1 % learn_every == 0:
+                    agent.learn()  
+
         # Update old states        
         old_states = states
 
@@ -87,9 +88,9 @@ for episode in range(300):
         all_done = terminal['__all__']
         steps += 1
 
+    # Episode stats
     episode_duration.append(time.time() - start)
     win_rate.append(perc_done or 0)
-
     print(f'Episode: {episode+1} Last 100 win rate: {np.mean(win_rate)}')
     print(f'Action probs: {np.array(action_probs)/np.sum(np.array(action_probs))}')
     print(f'Average Episode duration: {np.mean(episode_duration):.2f}s')

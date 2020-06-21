@@ -32,21 +32,21 @@ class FlatlandEnv(gym.Env):
             n_nodes=2, n_feats=11, ob_radius=10, x_dim=36, y_dim=36):
 
         self.tree_obs = tree_observation.TreeObservation(n_nodes)
-        self.total_feats = n_feats * sum([4**i for i in range(n_nodes+1)])
-        self.action_space = spaces.Discrete(n_acts)
-        self.observation_space = spaces.Box(
-            low=min_obs, 
-            high=max_obs, 
-            shape=(self.total_feats,), 
-            dtype=np.float32
-        )
+        # self.total_feats = n_feats * sum([4**i for i in range(n_nodes+1)])
+        # self.action_space = spaces.Discrete(n_acts)
+        # self.observation_space = spaces.Box(
+        #     low=min_obs, 
+        #     high=max_obs, 
+        #     shape=(self.total_feats,), 
+        #     dtype=np.float32
+        # )
         self.n_cars = n_cars
         self.n_nodes = n_nodes
         self.ob_radius = ob_radius
 
         rail_gen = sparse_rail_generator(
             max_num_cities=3,
-            seed=123,
+            seed=666,
             grid_mode=False,
             max_rails_between_cities=2,
             max_rails_in_city=3
@@ -90,12 +90,12 @@ class FlatlandEnv(gym.Env):
                     max_depth=self.n_nodes, 
                     observation_radius=self.ob_radius
                 )
+                # Keep track of last observation for trains that finish    
+                self.old_obs[agent_id] = next_obs[agent_id].copy()
             else:
                 # Keep last observation
                 next_obs[agent_id] = self.old_obs[agent_id]
 
-            # Keep track of last observation for trains that finish    
-            self.old_obs[agent_id] = next_obs[agent_id].copy()
 
         return next_obs, all_rewards, done, self.info
 
