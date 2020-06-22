@@ -72,6 +72,7 @@ class DQNAgent:
 
 	def remember(self, state, action, reward, new_state, done):
 		self.memory.store_transition(state, action, reward, new_state, done)
+		self.epsilon = self.epsilon * self.epsilon_decay if self.epsilon > self.epsilon_min else self.epsilon_min
 
 	def choose_action(self, state):
 		state = state[np.newaxis, :]
@@ -101,8 +102,6 @@ class DQNAgent:
 		q_target[batch_index, action_indices] = reward + self.gamma * np.max(q_next, axis=1)*done
 
 		loss = self.q_eval.fit(state, q_target, verbose=0)
-		
-		self.epsilon = self.epsilon * self.epsilon_decay if self.epsilon > self.epsilon_min else self.epsilon_min
 		
 		return loss
 
@@ -157,7 +156,7 @@ class DoubleDQNAgent:
 		next_q_values = self.target_model.predict(new_state)[range(self.batch_size), np.argmax(self.q_eval.predict(new_state), axis=1)]
 
 		targets[range(self.batch_size), action_indices] = reward + (1-done) * next_q_values * self.gamma
-		loss = self.q_eval.fit(state, targets, verbose=1)
+		loss = self.q_eval.fit(state, targets, verbose=0)
 
 		self.epsilon = self.epsilon * self.epsilon_decay if self.epsilon > self.epsilon_min else self.epsilon_min
 

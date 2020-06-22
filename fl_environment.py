@@ -72,9 +72,9 @@ class FlatlandEnv(gym.Env):
         
         # Update the action of each agent
         for agent_id in range(self.n_cars):
-            if not self.info['action_required'][agent_id]:
-                action[agent_id] = 0
-            self.action_dict.update({agent_id: action[agent_id]})
+            if action[agent_id] is None:
+                action[agent_id] = 2
+            self.action_dict.update({agent_id: action[agent_id]+1})
 
         # Take actions, get observations
         next_obs, all_rewards, done, self.info = self._rail_env.step(self.action_dict)

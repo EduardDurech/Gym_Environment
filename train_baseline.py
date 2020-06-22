@@ -12,12 +12,12 @@ win_rate = deque(maxlen=100)
 episode_duration = deque(maxlen=100)
 
 # Env params
-n_actions = 5
+n_actions = 4
 n_agents = 1
 x_dim = 32 
 y_dim = 32 
 max_steps = 8 * (x_dim + y_dim) - 1
-learn_every = 1
+learn_every = 10
 
 # Flatland Environment
 environment = FlatlandEnv(
@@ -36,7 +36,7 @@ agent = DQNAgent(
     alpha=0.0005, 
     gamma=0.99, 
     epsilon=1.0, 
-    input_shape=25, 
+    input_shape=5, 
     batch_size=512, 
     n_actions=n_actions
 )
@@ -59,10 +59,10 @@ for episode in range(1000):
 
         # Pick action for each agent
         for agent_id in range(environment.n_cars):
-            if info['action_required'][agent_id]:
-                action = agent.choose_action(old_states[agent_id])
-                all_actions[agent_id] = action
-                action_probs[action] += 1
+            # if info['action_required'][agent_id]:
+            action = agent.choose_action(old_states[agent_id])
+            all_actions[agent_id] = action
+            action_probs[action] += 1
 
         # Perform actions in environment
         states, reward, terminal, info = environment.step(action=all_actions)
@@ -74,9 +74,10 @@ for episode in range(1000):
                 # Add state to memory
                 agent.remember(old_states[agent_id], all_actions[agent_id], reward[agent_id], states[agent_id], terminal[agent_id])
         
-                # Learn
-                if steps + 1 % learn_every == 0:
-                    agent.learn()  
+        # Learn
+        if (steps + 1) % learn_every == 0:
+            agent.learn()
+                    # agent.target_update()  
 
         # Update old states        
         old_states = states
@@ -87,7 +88,7 @@ for episode in range(1000):
         # We done yet?
         all_done = terminal['__all__']
         steps += 1
-
+    
     # Episode stats
     episode_duration.append(time.time() - start)
     win_rate.append(perc_done or 0)
@@ -95,4 +96,5 @@ for episode in range(1000):
     print(f'Action probs: {np.array(action_probs)/np.sum(np.array(action_probs))}')
     print(f'Average Episode duration: {np.mean(episode_duration):.2f}s')
 
+agent.save_model()
 environment.close()
