@@ -14,7 +14,7 @@ class FooEnv(gym.Env):
         self.action_space = spaces.Discrete(5)
 
         # Define Observation Space using spaces as in Action, in a spaces.Box there must be a [low, high]
-        self.observation_space = paces.Box(low=min_obs, high=max_obs, shape=(n_nodes*n_features,), dtype=np.float32) #Or shape=(n_nodes, n_features)
+        self.observation_space = spaces.Box(low=min_obs, high=max_obs, shape=(n_nodes*n_features,), dtype=np.float32) #Or shape=(n_nodes, n_features)
         
     def step(self, action):
         """
