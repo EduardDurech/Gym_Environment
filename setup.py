@@ -1,4 +1,4 @@
-from setuptools setup
+from setuptools import setup
 
 setup(
     name="env_pkg",
